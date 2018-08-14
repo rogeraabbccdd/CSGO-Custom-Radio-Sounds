@@ -1,6 +1,7 @@
 affirmative
 agree
 blinded
+bombexploding
 bombsiteclear
 bombtickingdown
 clear
@@ -8,7 +9,6 @@ clearedarea
 commanderdown
 coveringfriend
 coverme
-ct_bombexploding
 death
 decoy
 defendingbombsitea

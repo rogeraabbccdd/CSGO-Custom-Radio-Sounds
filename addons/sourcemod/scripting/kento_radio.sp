@@ -12,6 +12,7 @@ char g_radioSounds[][] = {
 	"affirmative",
 	"agree",
 	"blinded",
+	"bombexploding",
 	"bombsiteclear",
 	"bombtickingdown",
 	"clear",
@@ -19,7 +20,6 @@ char g_radioSounds[][] = {
 	"commanderdown",
 	"coveringfriend",
 	"coverme",
-	"ct_bombexploding",
 	"death",
 	"decoy",
 	"defendingbombsitea",
@@ -97,7 +97,7 @@ public Plugin myinfo =
 {
 	name = "[CS:GO] Custom Radio Sound",
 	author = "Kento",
-	version = "1.0",
+	version = "1.0.1",
 	description = "Custom Radio Sound.",
 	url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
@@ -307,6 +307,8 @@ public Action SendAudio(Handle timer, DataPack pack)
 	Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
 				
 	EmitSound(players, playersNum, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE);
+	
+	delete pack;
 }
 
 public void OnMapStart() 
