@@ -25,6 +25,7 @@ flashbang
 followingfriend
 followme
 friendlyfire
+gameafkbombdrop
 goingtodefendbombsite
 goingtoguardhostageescapezone
 goingtoguardloosebomb

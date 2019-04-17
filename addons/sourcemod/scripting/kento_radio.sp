@@ -6,6 +6,8 @@
 
 #pragma newdecls required
 
+bool DEBUGGING = false;
+
 // csgo/scripts/game_sound_...
 // ctmap_ and tmap_ are map positions for bots
 char g_radioSounds[][] = {
@@ -86,6 +88,7 @@ char g_radioSounds[][] = {
 	"waitingforhumantodefusebomb",
 	"waitinghere",
 	"whereisthebomb",
+	"gameafkbombdrop"
 }
 
 #define MAXMODEL 200
@@ -97,7 +100,7 @@ public Plugin myinfo =
 {
 	name = "[CS:GO] Custom Radio Sound",
 	author = "Kento",
-	version = "1.0.1",
+	version = "1.1",
 	description = "Custom Radio Sound.",
 	url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
@@ -113,7 +116,6 @@ public void OnPluginStart()
 	// Grenades
 	HookUserMessage(GetUserMessageId("RadioText"), RadioText, true);
 }
-
 
 char g_radioCommands[][] = 
 {
@@ -140,11 +142,12 @@ char g_radioCommands[][] =
     "regroup"
 };
 
+// When player use radio command
 public void AddRadioCommandListeners()
 {
 	for (int i = 0; i < sizeof(g_radioCommands); i++)
 		AddCommandListener(Command_Radio, g_radioCommands[i]);
-}
+} 
 
 public Action Command_Radio(int client, const char[] command, int argc) 
 {
@@ -155,13 +158,16 @@ public Action Command_Radio(int client, const char[] command, int argc)
 		int mid = FindModelIDByName(model);
 		FindSampleByCmd(command, sample, sizeof(sample));
 		int rid = FindRadioBySample(sample);
-/*
-		PrintToConsole(client, "cmd model %s", model);
-		PrintToConsole(client, "cmd mid %d", mid);
-		PrintToConsole(client, "cmd rid %d", rid);
-		PrintToConsole(client, "cmd sample %s", sample);
-		PrintToConsole(client, "cmd command %s", command);
-*/		
+
+		if(DEBUGGING){
+			PrintToChatAll("on radio cmd: %s", command);
+			PrintToChatAll("cmd model %s", model);
+			PrintToChatAll("cmd mid %d", mid);
+			PrintToChatAll("cmd rid %d", rid);
+			PrintToChatAll("cmd sample %s", sample);
+			PrintToChatAll("cmd command %s", command);	
+		}
+			
 		if(mid > -1 && rid > -1)
 		{
 			int team = GetClientTeam(client);
@@ -182,29 +188,34 @@ public Action Command_Radio(int client, const char[] command, int argc)
 
 void FindSampleByCmd(const char[] command, char[] sample, int maxlen)
 {
-	if(StrEqual(command,  "go"))				strcopy(sample, maxlen, "letsgo");		
-	else if(StrEqual(command, "fallback"))		strcopy(sample, maxlen, "fallback");		
-	else if(StrEqual(command, "sticktog"))		strcopy(sample, maxlen, "regroup");	
-	else if(StrEqual(command, "holdpos"))		strcopy(sample, maxlen, "hold");	
-	else if(StrEqual(command, "followme"))		strcopy(sample, maxlen, "followme");	
-	else if(StrEqual(command, "roger"))			strcopy(sample, maxlen, "affirmative");	
-	else if(StrEqual(command, "negative"))		strcopy(sample, maxlen, "negative");
-	else if(StrEqual(command, "cheer"))			strcopy(sample, maxlen, "onarollbrag");	
-	else if(StrEqual(command, "compliment"))	strcopy(sample, maxlen, "onarollbrag");	
-	else if(StrEqual(command, "thanks"))		strcopy(sample, maxlen, "thanks");	
-	else if(StrEqual(command, "enemyspot"))		strcopy(sample, maxlen, "enemyspotted");	
-	else if(StrEqual(command, "needbackup"))	strcopy(sample, maxlen, "needbackup");
-	else if(StrEqual(command, "takepoint"))		strcopy(sample, maxlen, "followingfriend");
-	else if(StrEqual(command, "sectorclear"))	strcopy(sample, maxlen, "clear");
-	else if(StrEqual(command, "inposition"))	strcopy(sample, maxlen, "inposition");
-	else if(StrEqual(command, "takingfire"))	strcopy(sample, maxlen, "takingfire");
-	else if(StrEqual(command, "reportingin"))	strcopy(sample, maxlen, "reportingin");
-	else if(StrEqual(command, "getout"))		strcopy(sample, maxlen, "bombtickingdown");
-	else if(StrEqual(command, "enemydown"))		strcopy(sample, maxlen, "enemydown");
-	else if(StrEqual(command, "coverme"))		strcopy(sample, maxlen, "coverme");
-	else if(StrEqual(command, "regroup"))		strcopy(sample, maxlen, "regroup");
+	if(StrEqual(command, "gogogo"))							strcopy(sample, maxlen, "letsgo");
+	else if(StrEqual(command, "go"))						strcopy(sample, maxlen, "letsgo");
+	else if(StrEqual(command, "sticktog"))					strcopy(sample, maxlen, "regroup");	
+	else if(StrEqual(command, "holdpos"))					strcopy(sample, maxlen, "hold");	
+	else if(StrEqual(command, "roger"))						strcopy(sample, maxlen, "affirmative");	
+	else if(StrEqual(command, "negative"))					strcopy(sample, maxlen, "negative");
+	else if(StrEqual(command, "cheer"))						strcopy(sample, maxlen, "onarollbrag");	
+	else if(StrEqual(command, "compliment"))				strcopy(sample, maxlen, "onarollbrag");	
+	else if(StrEqual(command, "enemyspot"))					strcopy(sample, maxlen, "enemyspotted");	
+	else if(StrEqual(command, "needbackup"))				strcopy(sample, maxlen, "needbackup");
+	else if(StrEqual(command, "takepoint"))					strcopy(sample, maxlen, "followingfriend");
+	else if(StrEqual(command, "sectorclear"))				strcopy(sample, maxlen, "clear");
+	else if(StrEqual(command, "inposition"))				strcopy(sample, maxlen, "inposition");
+	else if(StrEqual(command, "takingfire"))				strcopy(sample, maxlen, "takingfire");
+	else if(StrEqual(command, "reportingin"))				strcopy(sample, maxlen, "reportingin");
+	else if(StrEqual(command, "getout"))					strcopy(sample, maxlen, "bombtickingdown");
+	else if(StrEqual(command, "enemydown"))					strcopy(sample, maxlen, "enemydown");
+	else if(StrEqual(command, "coverme"))					strcopy(sample, maxlen, "coverme");
+	else if(StrEqual(command, "regroup"))					strcopy(sample, maxlen, "regroup");
+	else if(StrEqual(command, "fireinthehole"))				strcopy(sample, 1024, "grenade");
+	else if(StrEqual(command, "molotovinthehole"))			strcopy(sample, 1024, "molotov");
+	else if(StrEqual(command, "flashbanginthehole"))		strcopy(sample, 1024, "flashbang");
+	else if(StrEqual(command, "smokeinthehole"))			strcopy(sample, 1024, "smoke");
+	else if(StrEqual(command, "decoyinthehole"))			strcopy(sample, 1024, "decoy");
+	else strcopy(sample, 1024, command);
 }
 
+// grenades, planting, defusing and bot chats are radio text
 public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int playersNum, bool reliable, bool init)
 {
 	/*
@@ -242,33 +253,30 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	int mid = FindModelIDByName(model);
 	
 	char buffer[1024], sample[1024];
+	// for maps have zones
 	PbReadString(msg, "params", buffer, sizeof(buffer), 1);
-	
-	if(StrContains(buffer, "#Cstrike_TitlesTXT"))
-	{
-		ReplaceString(buffer, 1024, "#Cstrike_TitlesTXT_", "", false);
-	}
-	else
-	{
+	// for maps doesn't have zones
+	if( StrContains(buffer,"#Cstrike_TitlesTXT_") == -1 && StrContains(buffer,"#Cstrike_TitlesTXT_") == -1)
 		PbReadString(msg, "params", buffer, sizeof(buffer), 2);
-		ReplaceString(buffer, 1024, "#SFUI_TitlesTXT_", "", false);
-	}
-	
-	if(StrContains(buffer, "Fire_in_the_hole") != -1)				strcopy(sample, 1024, "grenade");
-	else if(StrContains(buffer, "Molotov_in_the_hole") != -1)		strcopy(sample, 1024, "molotov");
-	else if(StrContains(buffer, "Flashbang_in_the_hole") != -1)		strcopy(sample, 1024, "flashbang");
-	else if(StrContains(buffer, "Smoke_in_the_hole") != -1)			strcopy(sample, 1024, "smoke");
-	else if(StrContains(buffer, "Decoy_in_the_hole") != -1)			strcopy(sample, 1024, "decoy");
-	else	return Plugin_Continue;
-	
+
+	ReplaceString(buffer, 1024, "#Cstrike_TitlesTXT_", "", false);
+	ReplaceString(buffer, 1024, "#SFUI_TitlesTXT_", "", false);
+	ReplaceString(buffer, 1024, "_", "", false);
+
+	for(int i = 0; i <= strlen(buffer); ++i) 
+	{ 
+		buffer[i] = CharToLower(buffer[i]); 
+	} 
+
+	FindSampleByCmd(buffer, sample, sizeof(sample));
 	int rid = FindRadioBySample(sample);
-	
-	//PrintToConsoleAll("mid %d, rid %d", mid, rid);
+
+	if(DEBUGGING)	PrintToServer("text buf: %s, sample: %s, mid %d, rid %d, model - %s", buffer, sample, mid, rid, model);
 	
 	if(mid > -1 && rid > -1)
 	{
 		DataPack pack;
-		CreateDataTimer(0.0, SendAudio, pack);
+		CreateDataTimer(0.0, SendAudio, pack, TIMER_FLAG_NO_MAPCHANGE);
 		
 		pack.WriteCell(mid);
 		pack.WriteCell(rid);
@@ -308,7 +316,9 @@ public Action SendAudio(Handle timer, DataPack pack)
 				
 	EmitSound(players, playersNum, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE);
 	
-	delete pack;
+	// we don't need this
+	// https://forums.alliedmods.net/showthread.php?p=2523676
+	// delete pack;
 }
 
 public void OnMapStart() 
@@ -316,32 +326,36 @@ public void OnMapStart()
 	LoadRadio();
 }
 
+// For disable default radio sound.
 public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
 {
 	// +playervophoenixclear02.wav
 	// csgo/scripts/game_sound...
 	
 	// Is player voice
-	// PrintToConsoleAll("%s", sample);
-	if(StrContains(sample, "+playervo") && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
+	// PrintToChatAll("%s", sample);
+	// +player\vo\leet\threeenemiesleft03.wav
+	if(StrContains(sample, "+player\\vo") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
 	{
+		ReplaceString(sample, sizeof(sample), ".wav", "", false);
+		char radio[4][64];
+		ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
 		char model[1024];
 		GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
-		
 		int mid = FindModelIDByName(model);
 		
 		// Has this model.
 		if(mid > -1)
 		{
-			int rid = FindRadioBySample(sample);
+			int rid = FindRadioBySample(radio[3]);
 			// Has radio
 			if(rid > -1)
 			{
 				int team = GetClientTeam(entity);
-			
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
 				char sound[1024];
 				Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
-				for(int i = 1; i <= MaxClients; i++)
+				for(int i = 1; i <= sizeof(clients); i++)
 				{
 					if(IsValidClient(i) && GetClientTeam(i) == team)
 					{
@@ -349,7 +363,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 					}
 				}
 				
-				return Plugin_Handled;
+				return Plugin_Stop;
 			}
 		}
 	}
