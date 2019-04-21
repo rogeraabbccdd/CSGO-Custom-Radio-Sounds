@@ -47,7 +47,6 @@ lostenemy
 molotov
 needbackup
 negative
-negativeno
 niceshot
 noenemiesleft
 noenemiesleftbomb
