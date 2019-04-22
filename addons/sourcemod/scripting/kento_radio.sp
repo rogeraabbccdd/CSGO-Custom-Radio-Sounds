@@ -99,7 +99,7 @@ public Plugin myinfo =
 {
 	name = "[CS:GO] Custom Radio Sound",
 	author = "Kento",
-	version = "1.1.1",
+	version = "1.1.2",
 	description = "Custom Radio Sound.",
 	url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
@@ -109,82 +109,10 @@ public void OnPluginStart()
 	// For disable default radio sound.
 	AddNormalSoundHook(Event_SoundPlayed);
 	
-	// Listeners for radio commands.
-	AddRadioCommandListeners();
-	
 	// Grenades
 	HookUserMessage(GetUserMessageId("RadioText"), RadioText, true);
 
 	if(DEBUGGING)	RegAdminCmd("sm_radiomodels", Command_Model, ADMFLAG_ROOT);
-}
-
-char g_radioCommands[][] = 
-{
-    "go",
-    "cheer",
-    "fallback",
-    "sticktog",
-    "holdpos",
-    "followme",
-    "roger",
-    "negative",
-    "compliment",
-    "thanks",
-    "enemyspot",
-    "needbackup",
-    "takepoint",
-    "sectorclear",
-    "inposition",
-    "takingfire",
-    "reportingin",
-    "getout",
-    "enemydown",
-    "coverme",
-    "regroup"
-};
-
-// When player use radio command
-public void AddRadioCommandListeners()
-{
-	for (int i = 0; i < sizeof(g_radioCommands); i++)
-		AddCommandListener(Command_Radio, g_radioCommands[i]);
-} 
-
-public Action Command_Radio(int client, const char[] command, int argc) 
-{
-	if(IsValidClient(client))
-	{
-		char model[1024], sample[1024];
-		GetClientModel(client, model, sizeof(model));
-		int mid = FindModelIDByName(model);
-		FindSampleByCmd(command, sample, sizeof(sample));
-		int rid = FindRadioBySample(sample);
-
-		if(DEBUGGING){
-			PrintToChatAll("on radio cmd: %s", command);
-			PrintToChatAll("cmd model %s", model);
-			PrintToChatAll("cmd mid %d", mid);
-			PrintToChatAll("cmd rid %d", rid);
-			PrintToChatAll("cmd sample %s", sample);
-			PrintToChatAll("cmd command %s", command);	
-		}
-			
-		if(mid > -1 && rid > -1)
-		{
-			int team = GetClientTeam(client);
-			
-			char sound[1024];
-			Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
-			
-			for(int i = 1; i <= MaxClients; i++)
-			{
-				if(IsValidClient(i) && GetClientTeam(i) == team)
-				{
-					EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE, SNDLEVEL_NONE);
-				}
-			}
-		}
-	}
 }
 
 void FindSampleByCmd(const char[] command, char[] sample, int maxlen)
@@ -244,6 +172,7 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	"[english]SFUI_TitlesTXT_Decoy_in_the_hole"	"Decoy Out!"
 	*/
 	
+	if(DEBUGGING)	PrintToServer("RadioText");
 	int client = PbReadInt(msg, "client");
 	char model[1024];
 	GetClientModel(client, model, sizeof(model));
@@ -253,9 +182,10 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	// for maps have zones
 	PbReadString(msg, "params", buffer, sizeof(buffer), 1);
 	// for maps doesn't have zones
-	if( StrContains(buffer,"#Cstrike_TitlesTXT_") == -1 && StrContains(buffer,"#Cstrike_TitlesTXT_") == -1)
+	if( StrContains(buffer,"#Cstrike_TitlesTXT_") == -1 && StrContains(buffer,"#SFUI_TitlesTXT_") == -1)
 		PbReadString(msg, "params", buffer, sizeof(buffer), 2);
 
+	if(DEBUGGING)	PrintToServer("params %s", buffer);
 	ReplaceString(buffer, 1024, "#Cstrike_TitlesTXT_", "", false);
 	ReplaceString(buffer, 1024, "#SFUI_TitlesTXT_", "", false);
 	ReplaceString(buffer, 1024, "_", "", false);
@@ -268,7 +198,7 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	FindSampleByCmd(buffer, sample, sizeof(sample));
 	int rid = FindRadioBySample(sample);
 
-	if(DEBUGGING)	PrintToServer("text buf: %s, sample: %s, mid %d, rid %d, model - %s", buffer, sample, mid, rid, model);
+	if(DEBUGGING)	PrintToServer("buf: %s, sample: %s, mid %d, rid %d, playersNum: %d, model - %s", buffer, sample, mid, rid, playersNum, model);
 	
 	if(mid > -1 && rid > -1)
 	{
@@ -282,6 +212,7 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 		for(int i = 0; i < playersNum; i++)
 		{
 			pack.WriteCell(players[i]);
+			if(DEBUGGING)	PrintToServer("players %d, %N", i, players[i]);
 		}
 
 		pack.Reset();
