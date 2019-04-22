@@ -6,7 +6,7 @@
 
 #pragma newdecls required
 
-bool DEBUGGING = true;
+bool DEBUGGING = false;
 
 // csgo/scripts/game_sound_...
 // ctmap_ and tmap_ are map positions for bots
