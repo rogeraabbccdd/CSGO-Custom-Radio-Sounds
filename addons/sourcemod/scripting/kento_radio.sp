@@ -99,7 +99,7 @@ public Plugin myinfo =
 {
 	name = "[CS:GO] Custom Radio Sound",
 	author = "Kento",
-	version = "1.1.2",
+	version = "1.1.3",
 	description = "Custom Radio Sound.",
 	url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
@@ -120,7 +120,10 @@ void FindSampleByCmd(const char[] command, char[] sample, int maxlen)
 	if(StrEqual(command, "gogogo"))							strcopy(sample, maxlen, "letsgo");
 	else if(StrEqual(command, "go"))						strcopy(sample, maxlen, "letsgo");
 	else if(StrEqual(command, "sticktog"))					strcopy(sample, maxlen, "regroup");	
+	else if(StrEqual(command, "sticktogetherteam"))			strcopy(sample, maxlen, "regroup");	
+	else if(StrEqual(command, "sticktogether"))				strcopy(sample, maxlen, "regroup");	
 	else if(StrEqual(command, "holdpos"))					strcopy(sample, maxlen, "hold");	
+	else if(StrEqual(command, "rogerthat"))					strcopy(sample, maxlen, "affirmative");	
 	else if(StrEqual(command, "roger"))						strcopy(sample, maxlen, "affirmative");	
 	else if(StrEqual(command, "cheer"))						strcopy(sample, maxlen, "onarollbrag");	
 	else if(StrEqual(command, "compliment"))				strcopy(sample, maxlen, "onarollbrag");	
@@ -128,9 +131,8 @@ void FindSampleByCmd(const char[] command, char[] sample, int maxlen)
 	else if(StrEqual(command, "takepoint"))					strcopy(sample, maxlen, "followingfriend");
 	else if(StrEqual(command, "sectorclear"))				strcopy(sample, maxlen, "clear");
 	else if(StrEqual(command, "getout"))					strcopy(sample, maxlen, "bombtickingdown");
-	else if(StrEqual(command, "enemydown"))					strcopy(sample, maxlen, "enemydown");
+	else if(StrEqual(command, "getoutofthere"))				strcopy(sample, maxlen, "bombtickingdown");
 	else if(StrEqual(command, "coverme"))					strcopy(sample, maxlen, "coverme");
-	else if(StrEqual(command, "regroup"))					strcopy(sample, maxlen, "regroup");
 	else if(StrEqual(command, "fireinthehole"))				strcopy(sample, maxlen, "grenade");
 	else if(StrEqual(command, "molotovinthehole"))			strcopy(sample, maxlen, "molotov");
 	else if(StrEqual(command, "flashbanginthehole"))		strcopy(sample, maxlen, "flashbang");
