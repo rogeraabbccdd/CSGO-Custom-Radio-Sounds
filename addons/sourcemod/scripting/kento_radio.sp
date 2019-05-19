@@ -99,7 +99,7 @@ public Plugin myinfo =
 {
 	name = "[CS:GO] Custom Radio Sound",
 	author = "Kento",
-	version = "1.1.3",
+	version = "1.1.4",
 	description = "Custom Radio Sound.",
 	url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
@@ -265,36 +265,44 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 	// Is player voice
 	// PrintToChatAll("%s", sample);
 	// +player\vo\leet\threeenemiesleft03.wav
-	if(StrContains(sample, "+player\\vo") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
+	if(DEBUGGING)	PrintToServer("Event_SoundPlayed: %s ", sample);
+	if(StrContains(sample, "~player") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
 	{
 		ReplaceString(sample, sizeof(sample), ".wav", "", false);
-		char radio[4][64];
-		ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
+	
 		char model[1024];
 		GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
 		int mid = FindModelIDByName(model);
+
+		int rid = -1;
 		
-		// Has this model.
-		if(mid > -1)
+		// player/death1.wav
+		if(StrContains(sample, "death") != -1){
+			rid = FindRadioBySample("death");
+			if(DEBUGGING)	PrintToServer("hook sample: death, mid %d, rid %d, model - %s", mid, rid, model);
+		}
+		else{
+			char radio[4][64];
+			ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
+			rid = FindRadioBySample(radio[3]);
+			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
+		}
+
+		// Has this model and radio.
+		if(mid > -1 && rid > -1)
 		{
-			int rid = FindRadioBySample(radio[3]);
-			// Has radio
-			if(rid > -1)
+			int team = GetClientTeam(entity);
+			char sound[1024];
+			Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
+			for(int i = 1; i <= sizeof(clients); i++)
 			{
-				int team = GetClientTeam(entity);
-				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
-				char sound[1024];
-				Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
-				for(int i = 1; i <= sizeof(clients); i++)
+				if(IsValidClient(i) && GetClientTeam(i) == team)
 				{
-					if(IsValidClient(i) && GetClientTeam(i) == team)
-					{
-						EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE, SNDLEVEL_NONE);
-					}
+					EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE, SNDLEVEL_NONE);
 				}
-				
-				return Plugin_Stop;
 			}
+			
+			return Plugin_Stop;
 		}
 	}
 	
