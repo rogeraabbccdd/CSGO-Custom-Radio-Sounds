@@ -266,7 +266,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 	// PrintToChatAll("%s", sample);
 	// +player\vo\leet\threeenemiesleft03.wav
 	if(DEBUGGING)	PrintToServer("Event_SoundPlayed: %s ", sample);
-	if(StrContains(sample, "~player") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
+	if(StrContains(sample, "player") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
 	{
 		ReplaceString(sample, sizeof(sample), ".wav", "", false);
 	
