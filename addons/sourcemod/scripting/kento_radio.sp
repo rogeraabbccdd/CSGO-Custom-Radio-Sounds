@@ -132,7 +132,6 @@ void FindSampleByCmd(const char[] command, char[] sample, int maxlen)
 	else if(StrEqual(command, "sectorclear"))				strcopy(sample, maxlen, "clear");
 	else if(StrEqual(command, "getout"))					strcopy(sample, maxlen, "bombtickingdown");
 	else if(StrEqual(command, "getoutofthere"))				strcopy(sample, maxlen, "bombtickingdown");
-	else if(StrEqual(command, "coverme"))					strcopy(sample, maxlen, "coverme");
 	else if(StrEqual(command, "fireinthehole"))				strcopy(sample, maxlen, "grenade");
 	else if(StrEqual(command, "molotovinthehole"))			strcopy(sample, maxlen, "molotov");
 	else if(StrEqual(command, "flashbanginthehole"))		strcopy(sample, maxlen, "flashbang");
