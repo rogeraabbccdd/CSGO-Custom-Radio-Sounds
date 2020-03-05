@@ -323,7 +323,7 @@ int FindModelIDByName(char [] model)
 	int r = -1;
 	for (int i = 0; i < modelcount; i++)
 	{
-		if(StrEqual(g_model[i], model)) r = i;
+		if(StrContains(model, g_model[i]) != -1) r = i;
 	}
 	return r;
 }
