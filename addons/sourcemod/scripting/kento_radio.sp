@@ -6,7 +6,7 @@
 
 #pragma newdecls required
 
-bool DEBUGGING = false;
+bool DEBUGGING = true;
 
 // csgo/scripts/game_sound_...
 // ctmap_ and tmap_ are map positions for bots
@@ -87,19 +87,23 @@ char g_radioSounds[][] = {
 	"waitingforhumantodefusebomb",
 	"waitinghere",
 	"whereisthebomb",
-	"gameafkbombdrop"
+	"gameafkbombdrop",
+	"needdrop",
+	"goa",
+	"gob",
+	"sorry"
 }
 
 #define MAXMODEL 200
-char g_radioFiles[MAXMODEL][80][1024];
-char g_model[MAXMODEL][1024];
+char g_radioFiles[MAXMODEL][81][512];
+char g_model[MAXMODEL][512];
 int modelcount;
 
 public Plugin myinfo =
 {
 	name = "[CS:GO] Custom Radio Sound",
 	author = "Kento",
-	version = "1.1.4",
+	version = "1.2",
 	description = "Custom Radio Sound.",
 	url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
@@ -117,27 +121,34 @@ public void OnPluginStart()
 
 void FindSampleByCmd(const char[] command, char[] sample, int maxlen)
 {
-	if(StrEqual(command, "gogogo"))							strcopy(sample, maxlen, "letsgo");
-	else if(StrEqual(command, "go"))						strcopy(sample, maxlen, "letsgo");
-	else if(StrEqual(command, "sticktog"))					strcopy(sample, maxlen, "regroup");	
-	else if(StrEqual(command, "sticktogetherteam"))			strcopy(sample, maxlen, "regroup");	
-	else if(StrEqual(command, "sticktogether"))				strcopy(sample, maxlen, "regroup");	
-	else if(StrEqual(command, "holdpos"))					strcopy(sample, maxlen, "hold");	
-	else if(StrEqual(command, "rogerthat"))					strcopy(sample, maxlen, "affirmative");	
-	else if(StrEqual(command, "roger"))						strcopy(sample, maxlen, "affirmative");	
-	else if(StrEqual(command, "cheer"))						strcopy(sample, maxlen, "onarollbrag");	
-	else if(StrEqual(command, "compliment"))				strcopy(sample, maxlen, "onarollbrag");	
-	else if(StrEqual(command, "enemyspot"))					strcopy(sample, maxlen, "enemyspotted");	
-	else if(StrEqual(command, "takepoint"))					strcopy(sample, maxlen, "followingfriend");
-	else if(StrEqual(command, "sectorclear"))				strcopy(sample, maxlen, "clear");
-	else if(StrEqual(command, "getout"))					strcopy(sample, maxlen, "bombtickingdown");
-	else if(StrEqual(command, "getoutofthere"))				strcopy(sample, maxlen, "bombtickingdown");
-	else if(StrEqual(command, "fireinthehole"))				strcopy(sample, maxlen, "grenade");
-	else if(StrEqual(command, "molotovinthehole"))			strcopy(sample, maxlen, "molotov");
-	else if(StrEqual(command, "flashbanginthehole"))		strcopy(sample, maxlen, "flashbang");
-	else if(StrEqual(command, "smokeinthehole"))			strcopy(sample, maxlen, "smoke");
-	else if(StrEqual(command, "decoyinthehole"))			strcopy(sample, maxlen, "decoy");
-	else if(StrEqual(command, "negativeno"))				strcopy(sample, maxlen, "negative");
+	if(StrContains(command, "requestmove") != -1)						strcopy(sample, maxlen, "letsgo");
+	else if(StrContains(command, "roundstart") != -1)						strcopy(sample, maxlen, "locknload");
+	else if(StrContains(command, "sticktog") != -1)					strcopy(sample, maxlen, "regroup");	
+	else if(StrContains(command, "sticktogetherteam") != -1)			strcopy(sample, maxlen, "regroup");	
+	else if(StrContains(command, "sticktogether") != -1)				strcopy(sample, maxlen, "regroup");	
+	else if(StrContains(command, "holdpos") != -1)					strcopy(sample, maxlen, "hold");	
+	else if(StrContains(command, "affirmation") != -1)					strcopy(sample, maxlen, "affirmative");	
+	else if(StrContains(command, "roger") != -1)						strcopy(sample, maxlen, "affirmative");	
+	else if(StrContains(command, "cheer") != -1)						strcopy(sample, maxlen, "onarollbrag");	
+	else if(StrContains(command, "compliment") != -1)				strcopy(sample, maxlen, "onarollbrag");	
+	else if(StrContains(command, "enemyspot") != -1)					strcopy(sample, maxlen, "enemyspotted");	
+	else if(StrContains(command, "seesenemy") != -1)					strcopy(sample, maxlen, "enemyspotted");	
+	else if(StrContains(command, "takepoint") != -1)					strcopy(sample, maxlen, "followingfriend");
+	else if(StrContains(command, "sectorclear") != -1)				strcopy(sample, maxlen, "clear");
+	else if(StrContains(command, "getout") != -1)					strcopy(sample, maxlen, "bombtickingdown");
+	else if(StrContains(command, "getoutofthere") != -1)				strcopy(sample, maxlen, "bombtickingdown");
+	else if(StrContains(command, "fireinthehole") != -1)				strcopy(sample, maxlen, "grenade");
+	else if(StrContains(command, "molotovinthehole") != -1)			strcopy(sample, maxlen, "molotov");
+	else if(StrContains(command, "flashbanginthehole") != -1)		strcopy(sample, maxlen, "flashbang");
+	else if(StrContains(command, "smokeinthehole") != -1)			strcopy(sample, maxlen, "smoke");
+	else if(StrContains(command, "decoyinthehole") != -1)			strcopy(sample, maxlen, "decoy");
+	else if(StrContains(command, "negativeno") != -1)				strcopy(sample, maxlen, "negative");
+	else if(StrContains(command, "requestweapon") != -1)				strcopy(sample, maxlen, "needdrop");
+	else if(StrContains(command, "gotoa") != -1)							strcopy(sample, maxlen, "goa");
+	else if(StrContains(command, "gotob") != -1)							strcopy(sample, maxlen, "gob");
+	else if(StrContains(command, "goa") != -1)							strcopy(sample, maxlen, "goa");
+	else if(StrContains(command, "gob") != -1)							strcopy(sample, maxlen, "gob");
+	else if(StrContains(command, "go") != -1)							strcopy(sample, maxlen, "letsgo");
 	else strcopy(sample, maxlen, command);
 }
 
@@ -162,7 +173,7 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	0 - #ENTNAME[8]Tom
 	1 - Middle
 	2 - #SFUI_TitlesTXT_Smoke_in_the_hole
- 	3 - auto
+	3 - auto
 	
 	csgo/resource/csgo_...
 	------------------------------------
@@ -175,11 +186,11 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	
 	if(DEBUGGING)	PrintToServer("RadioText");
 	int client = PbReadInt(msg, "client");
-	char model[1024];
+	char model[512];
 	GetClientModel(client, model, sizeof(model));
 	int mid = FindModelIDByName(model);
 	
-	char buffer[1024], sample[1024];
+	char buffer[64], sample[64];
 	// for maps have zones
 	PbReadString(msg, "params", buffer, sizeof(buffer), 1);
 	// for maps doesn't have zones
@@ -187,9 +198,9 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 		PbReadString(msg, "params", buffer, sizeof(buffer), 2);
 
 	if(DEBUGGING)	PrintToServer("params %s", buffer);
-	ReplaceString(buffer, 1024, "#Cstrike_TitlesTXT_", "", false);
-	ReplaceString(buffer, 1024, "#SFUI_TitlesTXT_", "", false);
-	ReplaceString(buffer, 1024, "_", "", false);
+	ReplaceString(buffer, sizeof(buffer), "#Cstrike_TitlesTXT_", "", false);
+	ReplaceString(buffer, sizeof(buffer), "#SFUI_TitlesTXT_", "", false);
+	ReplaceString(buffer, sizeof(buffer), "_", "", false);
 
 	for(int i = 0; i <= strlen(buffer); ++i) 
 	{ 
@@ -240,9 +251,8 @@ public Action SendAudio(Handle timer, DataPack pack)
 	}
 	playersNum = count;
 	
-	char sound[1024];
+	char sound[512];
 	Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
-				
 	EmitSound(players, playersNum, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE);
 	
 	// we don't need this
@@ -268,8 +278,9 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 	if(StrContains(sample, "player") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
 	{
 		ReplaceString(sample, sizeof(sample), ".wav", "", false);
-	
-		char model[1024];
+		ReplaceString(sample, sizeof(sample), "_", "", false);
+
+		char model[512];
 		GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
 		int mid = FindModelIDByName(model);
 
@@ -283,6 +294,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 		else{
 			char radio[4][64];
 			ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
+			FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
 			rid = FindRadioBySample(radio[3]);
 			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
 		}
@@ -291,7 +303,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 		if(mid > -1 && rid > -1)
 		{
 			int team = GetClientTeam(entity);
-			char sound[1024];
+			char sound[512];
 			Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
 			for(int i = 1; i <= sizeof(clients); i++)
 			{
@@ -313,7 +325,10 @@ int FindRadioBySample(char [] sample)
 	int r = -1;
 	for (int i = 0; i < sizeof(g_radioSounds); i++)
 	{
-		if(StrContains(sample, g_radioSounds[i]) != -1) r = i;
+		if(StrContains(sample, g_radioSounds[i]) != -1){
+			r = i;
+			break;
+		}
 	}
 	return r;
 }
@@ -323,7 +338,11 @@ int FindModelIDByName(char [] model)
 	int r = -1;
 	for (int i = 0; i < modelcount; i++)
 	{
-		if(StrContains(model, g_model[i]) != -1) r = i;
+		if(StrContains(model, g_model[i]) != -1) 
+		{
+			r = i;
+			break;
+		}
 	}
 	return r;
 }
@@ -346,7 +365,7 @@ void LoadRadio()
 		SetFailState("Fatal error: Unable to read configuration file \"%s\"!", Configfile);
 	}
 	
-	char model[1024], file[1024];
+	char model[512], file[512];
 	modelcount = 0;
 	do
 	{
@@ -357,11 +376,11 @@ void LoadRadio()
 		{
 			kv.GetString(g_radioSounds[i], file, sizeof(file), "");
 			
-			char filepath[1024];
+			char filepath[512];
 			Format(filepath, sizeof(filepath), "sound/%s", file)
 			AddFileToDownloadsTable(filepath);
 			
-			char soundpath[1024];
+			char soundpath[512];
 			Format(soundpath, sizeof(soundpath), "*/%s", file);
 			FakePrecacheSound(soundpath);
 			
