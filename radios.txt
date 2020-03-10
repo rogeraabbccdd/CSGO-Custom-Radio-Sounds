@@ -26,6 +26,8 @@ followingfriend
 followme
 friendlyfire
 gameafkbombdrop
+goa
+gob
 goingtodefendbombsite
 goingtoguardhostageescapezone
 goingtoguardloosebomb
@@ -46,6 +48,7 @@ locknload
 lostenemy
 molotov
 needbackup
+needdrop
 negative
 niceshot
 noenemiesleft
@@ -64,6 +67,7 @@ scaredemote
 smoke
 sniperkilled
 sniperwarning
+sorry
 spottedbomber
 spottedloosebomb
 takingfire
