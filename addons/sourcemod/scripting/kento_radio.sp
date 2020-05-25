@@ -3,10 +3,11 @@
 #include <sdkhooks>
 #include <kento_csgocolors>
 #include <cstrike>
+#include <regex>
 
 #pragma newdecls required
 
-bool DEBUGGING = true;
+bool DEBUGGING = false;
 
 // csgo/scripts/game_sound_...
 // ctmap_ and tmap_ are map positions for bots
@@ -22,7 +23,20 @@ char g_radioSounds[][] = {
 	"commanderdown",
 	"coveringfriend",
 	"coverme",
-	"death",
+	"death1",
+	"death2",
+	"death3",
+	"death4",
+	"death5",
+	"death6",
+	"kevlar1",
+	"kevlar2",
+	"kevlar3",
+	"kevlar4",
+	"kevlar5",
+	"headshot1",
+	"headshot2",
+	"bhit_helmet",
 	"decoy",
 	"defendingbombsitea",
 	"defendingbombsiteb",
@@ -95,7 +109,7 @@ char g_radioSounds[][] = {
 }
 
 #define MAXMODEL 200
-char g_radioFiles[MAXMODEL][81][512];
+char g_radioFiles[MAXMODEL][94][512];
 char g_model[MAXMODEL][512];
 int modelcount;
 
@@ -197,7 +211,7 @@ public Action RadioText(UserMsg msg_id, Handle msg, const int[] players, int pla
 	if( StrContains(buffer,"#Cstrike_TitlesTXT_") == -1 && StrContains(buffer,"#SFUI_TitlesTXT_") == -1)
 		PbReadString(msg, "params", buffer, sizeof(buffer), 2);
 
-	if(DEBUGGING)	PrintToServer("params %s", buffer);
+	if(DEBUGGING) PrintToServer("params %s", buffer);
 	ReplaceString(buffer, sizeof(buffer), "#Cstrike_TitlesTXT_", "", false);
 	ReplaceString(buffer, sizeof(buffer), "#SFUI_TitlesTXT_", "", false);
 	ReplaceString(buffer, sizeof(buffer), "_", "", false);
@@ -266,7 +280,7 @@ public void OnMapStart()
 }
 
 // For disable default radio sound.
-public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags)
+public Action Event_SoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
 	// +playervophoenixclear02.wav
 	// csgo/scripts/game_sound...
@@ -274,51 +288,81 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 	// Is player voice
 	// PrintToChatAll("%s", sample);
 	// +player\vo\leet\threeenemiesleft03.wav
+	bool sound_origin_from_entity = false;
 	if(DEBUGGING)	PrintToServer("Event_SoundPlayed: %s ", sample);
 	if(StrContains(sample, "player") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
 	{
-		ReplaceString(sample, sizeof(sample), ".wav", "", false);
-		ReplaceString(sample, sizeof(sample), "_", "", false);
+		char buffer[PLATFORM_MAX_PATH];
+		strcopy(buffer, PLATFORM_MAX_PATH, sample);
+		ReplaceString(buffer, PLATFORM_MAX_PATH, ".wav", "", false);
+		ReplaceString(buffer, PLATFORM_MAX_PATH, "_", "", false);
 
 		char model[512];
 		GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
 		int mid = FindModelIDByName(model);
-
 		int rid = -1;
-		bool sound_origin_from_entity = false;
 		
 		// player/death1.wav
-		if(StrContains(sample, "death") != -1)
-		{
-			rid = FindRadioBySample("death");
+		if (StrContains(buffer, "player/death", false) != -1) {
+			char custom_death[16];
+			Format(custom_death, 16, "death%i", GetRandomInt(1, 6));
+			rid = FindRadioBySample(custom_death);
 			sound_origin_from_entity = true;
-			if(DEBUGGING)	PrintToServer("hook sample: death, mid %d, rid %d, model - %s", mid, rid, model);
-		}
-		else
-		{
+			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_death, mid, rid, model);
+		} else if (StrContains(buffer, "player/kevlar", false) != -1) {
+			char custom_kevlar[16];
+			Format(custom_kevlar, 16, "kevlar%i", GetRandomInt(1, 5));
+			rid = FindRadioBySample(custom_kevlar);
+			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_kevlar, mid, rid, model);
+			// PrintToServer("[Leayal] %i b %i: %s", entity, numClients, sample);
+		} else if (StrContains(buffer, "player/headshot", false) != -1) {
+			char custom_headshot[16];
+			Format(custom_headshot, 16, "headshot%i", GetRandomInt(1, 2));
+			rid = FindRadioBySample(custom_headshot);
+			sound_origin_from_entity = true;
+			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_headshot, mid, rid, model);
+			// PrintToServer("[Leayal] %i c %i: %s", entity, numClients, sample);
+		} else if (StrContains(buffer, "player/bhithelmet", false) != -1) {
+			char custom_bhit_helmet[16];
+			Format(custom_bhit_helmet, 16, "bhit_helmet", GetRandomInt(1, 2));
+			rid = FindRadioBySample(custom_bhit_helmet);
+			sound_origin_from_entity = true;
+			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_bhit_helmet, mid, rid, model);
+			// PrintToServer("[Leayal] %i d %i: %s", entity, numClients, sample);
+		} else {
 			char radio[4][64];
-			ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
+			ExplodeString(buffer, "\\", radio, sizeof(radio), sizeof(radio[]));	
 			FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
 			rid = FindRadioBySample(radio[3]);
 			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
+			// PrintToServer("[Leayal] %i f %i: %s", entity, numClients, sample);
 		}
 
 		// Has this model and radio.
 		if(mid > -1 && rid > -1)
 		{
-			char sound[512];
-			Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
+			// int team = GetClientTeam(entity);
+			// char sound[512];
+			Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
 			if (sound_origin_from_entity && IsValidEntity(entity))
 			{
 				float position[3];
 				GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
-				EmitSound(clients, numClients, sound, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL, -1, position, NULL_VECTOR, false);
+				EmitSound(clients, numClients, buffer, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL, -1, position, NULL_VECTOR, false);
 			}
 			else
 			{
-				EmitSound(clients, numClients, sound, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL);
+				EmitSound(clients, numClients, buffer, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL);
 			}
-			
+			/*
+			for(int i = 1; i <= sizeof(clients); i++)
+			{
+				if(IsValidClient(i) && GetClientTeam(i) == team)
+				{
+					EmitSoundToClient(i, sample, entity, channel, level, flags, volume, pitch);
+				}
+			}
+			*/
 			return Plugin_Stop;
 		}
 	}
