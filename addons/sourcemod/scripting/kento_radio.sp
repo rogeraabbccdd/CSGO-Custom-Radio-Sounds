@@ -285,13 +285,17 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 		int mid = FindModelIDByName(model);
 
 		int rid = -1;
+		bool sound_origin_from_entity = false;
 		
 		// player/death1.wav
-		if(StrContains(sample, "death") != -1){
+		if(StrContains(sample, "death") != -1)
+		{
 			rid = FindRadioBySample("death");
+			sound_origin_from_entity = true;
 			if(DEBUGGING)	PrintToServer("hook sample: death, mid %d, rid %d, model - %s", mid, rid, model);
 		}
-		else{
+		else
+		{
 			char radio[4][64];
 			ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
 			FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
@@ -302,15 +306,17 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 		// Has this model and radio.
 		if(mid > -1 && rid > -1)
 		{
-			int team = GetClientTeam(entity);
 			char sound[512];
 			Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
-			for(int i = 1; i <= sizeof(clients); i++)
+			if (sound_origin_from_entity && IsValidEntity(entity))
 			{
-				if(IsValidClient(i) && GetClientTeam(i) == team)
-				{
-					EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE, SNDLEVEL_NONE);
-				}
+				float position[3];
+				GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+				EmitSound(clients, numClients, sound, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL, -1, position, NULL_VECTOR, false);
+			}
+			else
+			{
+				EmitSound(clients, numClients, sound, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL);
 			}
 			
 			return Plugin_Stop;
