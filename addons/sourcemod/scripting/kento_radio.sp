@@ -3,7 +3,6 @@
 #include <sdkhooks>
 #include <kento_csgocolors>
 #include <cstrike>
-#include <regex>
 
 #pragma newdecls required
 
