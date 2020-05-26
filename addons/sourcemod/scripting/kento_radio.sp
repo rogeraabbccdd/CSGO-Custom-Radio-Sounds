@@ -287,7 +287,6 @@ public Action Event_SoundPlayed(int clients[MAXPLAYERS], int &numClients, char s
 	// Is player voice
 	// PrintToChatAll("%s", sample);
 	// +player\vo\leet\threeenemiesleft03.wav
-	bool sound_origin_from_entity = false;
 	if(DEBUGGING)	PrintToServer("Event_SoundPlayed: %s ", sample);
 	if(StrContains(sample, "player") != -1 && IsValidEntity(entity) && entity > 0 && entity <= MaxClients)
 	{
@@ -299,70 +298,107 @@ public Action Event_SoundPlayed(int clients[MAXPLAYERS], int &numClients, char s
 		char model[512];
 		GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
 		int mid = FindModelIDByName(model);
-		int rid = -1;
-		
-		// player/death1.wav
-		if (StrContains(buffer, "player/death", false) != -1) {
-			char custom_death[16];
-			Format(custom_death, 16, "death%i", GetRandomInt(1, 6));
-			rid = FindRadioBySample(custom_death);
-			sound_origin_from_entity = true;
-			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_death, mid, rid, model);
-		} else if (StrContains(buffer, "player/kevlar", false) != -1) {
-			char custom_kevlar[16];
-			Format(custom_kevlar, 16, "kevlar%i", GetRandomInt(1, 5));
-			rid = FindRadioBySample(custom_kevlar);
-			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_kevlar, mid, rid, model);
-			// PrintToServer("[Leayal] %i b %i: %s", entity, numClients, sample);
-		} else if (StrContains(buffer, "player/headshot", false) != -1) {
-			char custom_headshot[16];
-			Format(custom_headshot, 16, "headshot%i", GetRandomInt(1, 2));
-			rid = FindRadioBySample(custom_headshot);
-			sound_origin_from_entity = true;
-			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_headshot, mid, rid, model);
-			// PrintToServer("[Leayal] %i c %i: %s", entity, numClients, sample);
-		} else if (StrContains(buffer, "player/bhithelmet", false) != -1) {
-			char custom_bhit_helmet[16];
-			Format(custom_bhit_helmet, 16, "bhit_helmet", GetRandomInt(1, 2));
-			rid = FindRadioBySample(custom_bhit_helmet);
-			sound_origin_from_entity = true;
-			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_bhit_helmet, mid, rid, model);
-			// PrintToServer("[Leayal] %i d %i: %s", entity, numClients, sample);
-		} else {
-			char radio[4][64];
-			ExplodeString(buffer, "\\", radio, sizeof(radio), sizeof(radio[]));	
-			FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
-			rid = FindRadioBySample(radio[3]);
-			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
-			// PrintToServer("[Leayal] %i f %i: %s", entity, numClients, sample);
-		}
 
-		// Has this model and radio.
-		if(mid > -1 && rid > -1)
+		if (mid > -1)
 		{
-			// int team = GetClientTeam(entity);
-			// char sound[512];
-			Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
-			if (sound_origin_from_entity && IsValidEntity(entity))
-			{
-				float position[3];
-				GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
-				EmitSound(clients, numClients, buffer, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL, -1, position, NULL_VECTOR, false);
-			}
-			else
-			{
-				EmitSound(clients, numClients, buffer, entity, channel, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL);
-			}
-			/*
-			for(int i = 1; i <= sizeof(clients); i++)
-			{
-				if(IsValidClient(i) && GetClientTeam(i) == team)
+			// PrintToServer("[Leayal] channel %i, volume %f, level %i, pitch %i, flags %i", channel, volume, level, pitch, flags);
+			// player/death1.wav
+			if (StrContains(buffer, "player/death", false) != -1) {
+				char custom_death[16];
+				Format(custom_death, 16, "death%i", GetRandomInt(1, 6));
+				int rid = FindRadioBySample(custom_death);
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_death, mid, rid, model);
+
+				if (rid > -1)
 				{
-					EmitSoundToClient(i, sample, entity, channel, level, flags, volume, pitch);
+					Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
+					float position[3];
+					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+					if (ArrayDeleteItem(clients, numClients, entity))
+					{
+						// EmitSound(clients, numClients - 1, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch, -1, position, NULL_VECTOR, false);
+						EmitSoundToClient(entity, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch);
+						numClients = numClients - 1;
+					}
+					EmitSound(clients, numClients, buffer, entity, channel, level, SND_CHANGEVOL, volume, pitch, -1, position, NULL_VECTOR, false);
+					return Plugin_Stop;
+				}
+			} else if (StrContains(buffer, "player/kevlar", false) != -1) {
+				char custom_kevlar[16];
+				Format(custom_kevlar, 16, "kevlar%i", GetRandomInt(1, 5));
+				int rid = FindRadioBySample(custom_kevlar);
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_kevlar, mid, rid, model);
+
+				if (rid > -1)
+				{
+					if (ArrayDeleteItem(clients, numClients, entity))
+					{
+						PrintToServer("Helmet");
+						Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
+						float position[3];
+						GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+						// EmitSound(clients, numClients - 1, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch, -1, position, NULL_VECTOR, false);
+						EmitSoundToClient(entity, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch);
+						numClients = numClients - 1;
+						EmitSound(clients, numClients, sample, entity, channel, level, SND_CHANGEVOL, volume, pitch, -1, position, NULL_VECTOR, false);
+						return Plugin_Stop;
+					}
+				}
+			} else if (StrContains(buffer, "player/headshot", false) != -1) {
+				char custom_headshot[16];
+				Format(custom_headshot, 16, "headshot%i", GetRandomInt(1, 2));
+				int rid = FindRadioBySample(custom_headshot);
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_headshot, mid, rid, model);
+
+				if (rid > -1)
+				{
+					Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
+					float position[3];
+					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+					if (ArrayDeleteItem(clients, numClients, entity))
+					{
+						// EmitSound(clients, numClients - 1, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch, -1, position, NULL_VECTOR, false);
+						EmitSoundToClient(entity, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch);
+						numClients = numClients - 1;
+					}
+					EmitSound(clients, numClients, buffer, entity, channel, level, SND_CHANGEVOL, volume, pitch, -1, position, NULL_VECTOR, false);
+					return Plugin_Stop;
+				}
+			} else if (StrContains(buffer, "player/bhithelmet", false) != -1) {
+				char custom_bhit_helmet[16];
+				Format(custom_bhit_helmet, 16, "bhit_helmet", GetRandomInt(1, 2));
+				int rid = FindRadioBySample(custom_bhit_helmet);
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", custom_bhit_helmet, mid, rid, model);
+
+				if (rid > -1)
+				{
+					if (ArrayDeleteItem(clients, numClients, entity))
+					{
+						PrintToServer("Helmet");
+						Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
+						float position[3];
+						GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+						// EmitSound(clients, numClients - 1, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch, -1, position, NULL_VECTOR, false);
+						EmitSoundToClient(entity, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch);
+						numClients = numClients - 1;
+						EmitSound(clients, numClients, sample, entity, channel, level, SND_CHANGEVOL, volume, pitch, -1, position, NULL_VECTOR, false);
+						return Plugin_Stop;
+					}
+				}
+			} else {
+				char radio[4][64];
+				ExplodeString(buffer, "\\", radio, sizeof(radio), sizeof(radio[]));	
+				FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
+				int rid = FindRadioBySample(radio[3]);
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
+
+				if (rid > -1)
+				{
+					Format(buffer, sizeof(buffer), "*/%s", g_radioFiles[mid][rid]);
+					EmitSound(clients, numClients, buffer, entity, channel, level, SND_NOFLAGS, volume, pitch);
+					return Plugin_Stop;
 				}
 			}
-			*/
-			return Plugin_Stop;
 		}
 	}
 	
@@ -396,6 +432,43 @@ int FindModelIDByName(char [] model)
 	return r;
 }
 
+int FindIndex(int[] array, int length, int item)
+{
+	for (int i = 0; i < length; i++)
+	{
+		if (array[i] == item)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+bool ArrayDeleteItem(int[] array, int length, int item)
+{
+	int index = FindIndex(array, length, item);
+	if (index == -1)
+	{
+		return false;
+	}
+	else
+	{
+		int lastIndex = length - 1;
+		if (lastIndex == index)
+		{
+			array[index] = 0;
+		}
+		else
+		{
+			for (int i = index + 1; i < length; i++)
+			{
+				array[i - 1] = array[i];
+			}
+		}
+		return true;
+	}
+}
+
 void LoadRadio()
 {
 	char Configfile[PLATFORM_MAX_PATH];
@@ -424,15 +497,16 @@ void LoadRadio()
 		for (int i = 0; i < sizeof(g_radioSounds); i++)
 		{
 			kv.GetString(g_radioSounds[i], file, sizeof(file), "");
-			
-			char filepath[512];
-			Format(filepath, sizeof(filepath), "sound/%s", file)
-			AddFileToDownloadsTable(filepath);
-			
-			char soundpath[512];
-			Format(soundpath, sizeof(soundpath), "*/%s", file);
-			FakePrecacheSound(soundpath);
-			
+			if (!StrEqual(file, ""))
+			{
+				char filepath[512];
+				Format(filepath, sizeof(filepath), "sound/%s", file)
+				AddFileToDownloadsTable(filepath);
+				
+				char soundpath[512];
+				Format(soundpath, sizeof(soundpath), "*/%s", file);
+				FakePrecacheSound(soundpath);
+			}
 			strcopy(g_radioFiles[modelcount][i], sizeof(g_radioFiles[][]), file);
 		}
 		modelcount++;
