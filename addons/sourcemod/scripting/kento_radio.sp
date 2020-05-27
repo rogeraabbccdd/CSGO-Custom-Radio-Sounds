@@ -308,7 +308,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 						// The entity is found in the "clients" array and has been removed successfully.
 						// Another emit especially for the entity since it's their own voice.
 						// So "updatePos" = true for the entity.
-						EmitSoundToClient(entity, sample, entity, channel, level, SND_CHANGEVOL | SND_CHANGEPITCH, volume, pitch);
+						EmitSoundToClient(entity, sample, entity, channel, level, (volume == SNDVOL_NORMAL) ? SND_NOFLAGS : SND_CHANGEVOL, volume);
 
 						// Since the entity within "clients" array is removed from the array.
 						// Correct the size of the array.
@@ -318,7 +318,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 					// Can use the "clients" array since the game engine already take care of which clients should be able to hear the sound.
 					// Hence, no need to check team for radio emit. And death groan can be heard by everyone (including enemies).
 					// param "updatePos" = false means the sound will not change its position to follow the entities hearing the sound.
-					EmitSound(clients, numClients, sample, entity, channel, level, SND_CHANGEVOL | SND_CHANGEPITCH, volume, pitch, -1, position, NULL_VECTOR, false);
+					EmitSound(clients, numClients, sample, entity, channel, level, (volume == SNDVOL_NORMAL) ? SND_NOFLAGS : SND_CHANGEVOL, volume, SNDPITCH_NORMAL, -1, position, NULL_VECTOR, false);
 					return Plugin_Stop;
 				}
 			}
@@ -335,7 +335,7 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 					Format(sample, sizeof(sample), "*/%s", g_radioFiles[mid][rid]);
 					// updatePos = true will make the sound update its position follow to the hearing entity
 					// Since this is radio sound, all clients (that should be able to hear) should hear the sound as if it's next to their ears.
-					EmitSound(clients, numClients, sample, entity, channel, level, SND_CHANGEVOL | SND_CHANGEPITCH, volume, pitch);
+					EmitSound(clients, numClients, sample, entity, channel, level, (volume == SNDVOL_NORMAL) ? SND_NOFLAGS : SND_CHANGEVOL, volume);
 					return Plugin_Stop;
 				}
 			}
