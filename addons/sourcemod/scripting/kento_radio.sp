@@ -284,36 +284,61 @@ public Action Event_SoundPlayed(int clients[64], int &numClients, char sample[PL
 		GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
 		int mid = FindModelIDByName(model);
 
-		int rid = -1;
-		
-		// player/death1.wav
-		if(StrContains(sample, "death") != -1){
-			rid = FindRadioBySample("death");
-			if(DEBUGGING)	PrintToServer("hook sample: death, mid %d, rid %d, model - %s", mid, rid, model);
-		}
-		else{
-			char radio[4][64];
-			ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
-			FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
-			rid = FindRadioBySample(radio[3]);
-			if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
-		}
-
-		// Has this model and radio.
-		if(mid > -1 && rid > -1)
+		// Has found model id.
+		if (mid > -1)
 		{
-			int team = GetClientTeam(entity);
-			char sound[512];
-			Format(sound, sizeof(sound), "*/%s", g_radioFiles[mid][rid]);
-			for(int i = 1; i <= sizeof(clients); i++)
+			int rid = -1;
+		
+			// player/death1.wav
+			if(StrContains(sample, "death") != -1)
 			{
-				if(IsValidClient(i) && GetClientTeam(i) == team)
+				rid = FindRadioBySample("death");
+				if(DEBUGGING)	PrintToServer("hook sample: death, mid %d, rid %d, model - %s", mid, rid, model);
+
+				// Has found radio id
+				if (rid > -1)
 				{
-					EmitSoundToClient(i, sound, SOUND_FROM_PLAYER, SNDCHAN_VOICE, SNDLEVEL_NONE);
+					// Re-use "sample" buffer
+					Format(sample, sizeof(sample), "*/%s", g_radioFiles[mid][rid]);
+					// Get the position of the entity that emitted the sound on the map
+					float position[3];
+					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+					if (ArrayDeleteItem(clients, numClients, entity))
+					{
+						// The entity is found in the "clients" array and has been removed successfully.
+						// Another emit especially for the entity since it's their own voice.
+						// So "updatePos" = true for the entity.
+						EmitSoundToClient(entity, sample, entity, channel, level, SND_CHANGEVOL | SND_CHANGEPITCH, volume, pitch);
+
+						// Since the entity within "clients" array is removed from the array.
+						// Correct the size of the array.
+						numClients = numClients - 1;
+					}
+
+					// Can use the "clients" array since the game engine already take care of which clients should be able to hear the sound.
+					// Hence, no need to check team for radio emit. And death groan can be heard by everyone (including enemies).
+					// param "updatePos" = false means the sound will not change its position to follow the entities hearing the sound.
+					EmitSound(clients, numClients, sample, entity, channel, level, SND_CHANGEVOL | SND_CHANGEPITCH, volume, pitch, -1, position, NULL_VECTOR, false);
+					return Plugin_Stop;
 				}
 			}
-			
-			return Plugin_Stop;
+			else
+			{
+				char radio[4][64];
+				ExplodeString(sample, "\\", radio, sizeof(radio), sizeof(radio[]));	
+				FindSampleByCmd(radio[3], radio[3], sizeof(radio[]));
+				rid = FindRadioBySample(radio[3]);
+				if(DEBUGGING)	PrintToServer("hook sample: %s, mid %d, rid %d, model - %s", radio[3], mid, rid, model);
+
+				if (rid > -1)
+				{
+					Format(sample, sizeof(sample), "*/%s", g_radioFiles[mid][rid]);
+					// updatePos = true will make the sound update its position follow to the hearing entity
+					// Since this is radio sound, all clients (that should be able to hear) should hear the sound as if it's next to their ears.
+					EmitSound(clients, numClients, sample, entity, channel, level, SND_CHANGEVOL | SND_CHANGEPITCH, volume, pitch);
+					return Plugin_Stop;
+				}
+			}
 		}
 	}
 	
@@ -399,6 +424,43 @@ stock bool IsValidClient(int client)
 	if (client > MaxClients) return false;
 	if (!IsClientConnected(client)) return false;
 	return IsClientInGame(client);
+}
+
+stock int FindIndex(int[] array, int length, int item)
+{
+	for (int i = 0; i < length; i++)
+	{
+		if (array[i] == item)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+bool ArrayDeleteItem(int[] array, int length, int item)
+{
+	int index = FindIndex(array, length, item);
+	if (index == -1)
+	{
+		return false;
+	}
+	else
+	{
+		int lastIndex = length - 1;
+		if (lastIndex == index)
+		{
+			array[index] = 0;
+		}
+		else
+		{
+			for (int i = index + 1; i < length; i++)
+			{
+				array[i - 1] = array[i];
+			}
+		}
+		return true;
+	}
 }
 
 // https://wiki.alliedmods.net/Csgo_quirks
